@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <EditText
+        android:id="@+id/editText_question"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Frage"
+        android:inputType="textMultiLine"/>
+
+    <EditText
+        android:id="@+id/editText_answer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Antwort"
+        android:inputType="textMultiLine"
+        android:layout_marginTop="16dp"/>
+
+    <Button
+        android:id="@+id/button_save"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Speichern"
+        android:layout_marginTop="24dp"/>
+
+    <Button
+        android:id="@+id/button_delete"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Löschen"
+        android:layout_marginTop="16dp"/>
+
+    <Spinner
+        android:id="@+id/spinner_category"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"/>
+
+
+</LinearLayout>
