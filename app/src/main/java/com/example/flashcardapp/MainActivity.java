@@ -26,6 +26,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Button addCardButton;
     private Button manageCategoriesButton;
+    private Button startLearningButton; // Neuer Button für Lernmodus
     private RecyclerView recyclerView;
     private CardAdapter cardAdapter;
 
@@ -45,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
 
         addCardButton = findViewById(R.id.button_add_card);
         manageCategoriesButton = findViewById(R.id.button_manage_categories);
+        startLearningButton = findViewById(R.id.button_start_learning); // Initialisieren
         recyclerView = findViewById(R.id.recyclerView_cards);
         categoryFilterSpinner = findViewById(R.id.spinnerCategoryFilter);
         cardSearchView = findViewById(R.id.searchView_cards); // Suchleiste initialisieren
@@ -86,6 +88,12 @@ public class MainActivity extends AppCompatActivity {
                 cardAdapter.filter(newText);
                 return false;
             }
+        });
+
+        // Listener für Button Lernmodus starten
+        startLearningButton.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, LearningActivity.class);
+            startActivity(intent);
         });
 
         insertSampleCard();

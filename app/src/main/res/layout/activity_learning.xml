@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="24dp">
+
+    <!-- Kategorieauswahl oder Alle Karten -->
+    <Spinner
+        android:id="@+id/spinnerCategorySelector"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Karteikarte: Frage -->
+    <TextView
+        android:id="@+id/textView_question"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:padding="16dp"/>
+
+    <!-- Karteikarte: Antwort (anfangs unsichtbar) -->
+    <TextView
+        android:id="@+id/textView_answer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"
+        android:padding="16dp"
+        android:visibility="gone" />
+
+    <!-- Button um Antwort auf-/zuzumachen -->
+    <Button
+        android:id="@+id/button_show_answer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Antwort anzeigen"
+        android:layout_marginTop="16dp"/>
+
+    <!-- Buttons zum Bewerten -->
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:gravity="center_horizontal">
+
+        <Button
+            android:id="@+id/button_known"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Gewusst" />
+
+        <Button
+            android:id="@+id/button_unknown"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Nicht gewusst"
+            android:layout_marginStart="16dp" />
+    </LinearLayout>
+
+</LinearLayout>

@@ -41,4 +41,12 @@
         android:text="Kategorien verwalten"
         android:layout_marginTop="8dp" />
 
+    <!-- Neuer Button zum Lernmodus starten -->
+    <Button
+        android:id="@+id/button_start_learning"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Lernmodus starten"
+        android:layout_marginTop="12dp" />
+
 </LinearLayout>
