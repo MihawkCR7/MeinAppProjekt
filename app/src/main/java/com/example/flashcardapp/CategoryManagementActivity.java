@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.SearchView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
@@ -23,7 +24,9 @@ public class CategoryManagementActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private CategoryAdapter adapter;
     private List<Category> categories = new ArrayList<>();
+    private List<Category> fullCategoryList = new ArrayList<>();
     private CategoryDao categoryDao;
+    private SearchView categorySearchView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +49,21 @@ public class CategoryManagementActivity extends AppCompatActivity {
 
         recyclerView.setAdapter(adapter);
 
+        categorySearchView = findViewById(R.id.searchView_categories);
+        categorySearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                filterCategories(query);
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                filterCategories(newText);
+                return false;
+            }
+        });
+
         findViewById(R.id.button_add_category).setOnClickListener(v -> showAddDialog());
 
         categoryDao = AppDatabase.getDatabase(getApplicationContext()).categoryDao();
@@ -55,9 +73,24 @@ public class CategoryManagementActivity extends AppCompatActivity {
 
     private void loadCategories() {
         new Thread(() -> {
-            categories = categoryDao.getAllCategories();
-            runOnUiThread(() -> adapter.setCategoryList(categories));
+            fullCategoryList = categoryDao.getAllCategories();
+            runOnUiThread(() -> adapter.setCategoryList(fullCategoryList));
         }).start();
+    }
+
+    private void filterCategories(String text) {
+        List<Category> filteredList = new ArrayList<>();
+        if (text == null || text.isEmpty()) {
+            filteredList.addAll(fullCategoryList);
+        } else {
+            String lowerText = text.toLowerCase();
+            for (Category c : fullCategoryList) {
+                if (c.getName().toLowerCase().contains(lowerText)) {
+                    filteredList.add(c);
+                }
+            }
+        }
+        adapter.setCategoryList(filteredList);
     }
 
     private void showAddDialog() {

@@ -6,6 +6,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.SearchView;
 import android.widget.Spinner;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -29,6 +30,8 @@ public class MainActivity extends AppCompatActivity {
     private CardAdapter cardAdapter;
 
     private Spinner categoryFilterSpinner; // Spinner für Kategorie-Filter
+    private SearchView cardSearchView; // Suchleiste für Karten
+
     private List<Category> categoryList = new ArrayList<>();
 
     private AppDatabase db;
@@ -43,7 +46,8 @@ public class MainActivity extends AppCompatActivity {
         addCardButton = findViewById(R.id.button_add_card);
         manageCategoriesButton = findViewById(R.id.button_manage_categories);
         recyclerView = findViewById(R.id.recyclerView_cards);
-        categoryFilterSpinner = findViewById(R.id.spinnerCategoryFilter); // Spinner initialisieren
+        categoryFilterSpinner = findViewById(R.id.spinnerCategoryFilter);
+        cardSearchView = findViewById(R.id.searchView_cards); // Suchleiste initialisieren
 
         db = AppDatabase.getDatabase(getApplicationContext());
         cardDao = db.cardDao();
@@ -67,6 +71,21 @@ public class MainActivity extends AppCompatActivity {
         manageCategoriesButton.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, CategoryManagementActivity.class);
             startActivity(intent);
+        });
+
+        // Listener für Suchleiste (Suchtext an Adapter weitergeben)
+        cardSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                cardAdapter.filter(query);
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                cardAdapter.filter(newText);
+                return false;
+            }
         });
 
         insertSampleCard();

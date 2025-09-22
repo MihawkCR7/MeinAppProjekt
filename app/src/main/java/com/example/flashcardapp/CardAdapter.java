@@ -10,11 +10,13 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.flashcardapp.model.Card;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class CardAdapter extends RecyclerView.Adapter<CardAdapter.CardViewHolder> {
 
-    private List<Card> cardList;
+    private List<Card> fullCardList;     // Alle Karten (Original)
+    private List<Card> filteredCardList; // Gefilterte Karten (Anzeige)
 
     // Interface für Karten-Klick
     public interface OnCardClickListener {
@@ -29,11 +31,30 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.CardViewHolder
     }
 
     public CardAdapter(List<Card> cardList) {
-        this.cardList = cardList;
+        this.fullCardList = new ArrayList<>(cardList);
+        this.filteredCardList = new ArrayList<>(cardList);
     }
 
     public void setCardList(List<Card> cards) {
-        this.cardList = cards;
+        this.fullCardList.clear();
+        this.fullCardList.addAll(cards);
+        filter(""); // Filter zurücksetzen, alle anzeigen
+    }
+
+    // Neue Filtermethode
+    public void filter(String text) {
+        filteredCardList.clear();
+        if (text == null || text.isEmpty()) {
+            filteredCardList.addAll(fullCardList);
+        } else {
+            String lowerText = text.toLowerCase();
+            for (Card card : fullCardList) {
+                if (card.getQuestion().toLowerCase().contains(lowerText) ||
+                        card.getAnswer().toLowerCase().contains(lowerText)) {
+                    filteredCardList.add(card);
+                }
+            }
+        }
         notifyDataSetChanged();
     }
 
@@ -47,7 +68,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.CardViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull CardViewHolder holder, int position) {
-        Card card = cardList.get(position);
+        Card card = filteredCardList.get(position);
         holder.questionTextView.setText(card.getQuestion());
         holder.answerTextView.setText(card.getAnswer());
         holder.answerTextView.setVisibility(View.GONE);
@@ -72,7 +93,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.CardViewHolder
 
     @Override
     public int getItemCount() {
-        return cardList != null ? cardList.size() : 0;
+        return filteredCardList != null ? filteredCardList.size() : 0;
     }
 
     static class CardViewHolder extends RecyclerView.ViewHolder {
