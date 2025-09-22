@@ -9,8 +9,15 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Neue Karte"
-        android:layout_marginBottom="24dp"
+        android:layout_marginBottom="12dp"
         android:layout_gravity="center_horizontal"/>
+
+    <!-- Spinner zum Filtern nach Kategorie -->
+    <Spinner
+        android:id="@+id/spinnerCategoryFilter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView_cards"
@@ -24,6 +31,5 @@
         android:layout_height="wrap_content"
         android:text="Kategorien verwalten"
         android:layout_marginTop="8dp" />
-
 
 </LinearLayout>

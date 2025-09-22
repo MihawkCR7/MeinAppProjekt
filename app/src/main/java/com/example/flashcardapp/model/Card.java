@@ -3,11 +3,13 @@ package com.example.flashcardapp.model;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.ForeignKey;
+import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
 import static androidx.room.ForeignKey.CASCADE;
 
 @Entity(tableName = "cards",
+        indices = {@Index(value = {"category_id"})},
         foreignKeys = @ForeignKey(entity = Category.class,
                 parentColumns = "id",
                 childColumns = "category_id",

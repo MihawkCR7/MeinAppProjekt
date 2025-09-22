@@ -2,7 +2,11 @@ package com.example.flashcardapp;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.Spinner;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -20,9 +24,12 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     private Button addCardButton;
-    private Button manageCategoriesButton;  // Neuer Button
+    private Button manageCategoriesButton;
     private RecyclerView recyclerView;
     private CardAdapter cardAdapter;
+
+    private Spinner categoryFilterSpinner; // Spinner für Kategorie-Filter
+    private List<Category> categoryList = new ArrayList<>();
 
     private AppDatabase db;
     private CardDao cardDao;
@@ -36,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
         addCardButton = findViewById(R.id.button_add_card);
         manageCategoriesButton = findViewById(R.id.button_manage_categories);
         recyclerView = findViewById(R.id.recyclerView_cards);
+        categoryFilterSpinner = findViewById(R.id.spinnerCategoryFilter); // Spinner initialisieren
 
         db = AppDatabase.getDatabase(getApplicationContext());
         cardDao = db.cardDao();
@@ -63,13 +71,18 @@ public class MainActivity extends AppCompatActivity {
 
         insertSampleCard();
 
-        loadCards();
+        loadCategoriesForSpinner(); // Kategorien für Spinner laden
+
+        setupSpinnerListener(); // Spinner Listener setzen
+
+        loadCards(); // initial alle Karten laden
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        loadCards();
+        loadCategoriesForSpinner(); // Kategorien aktuell halten
+        loadCards(); // Karten neu laden
     }
 
     private void insertSampleCard() {
@@ -87,14 +100,12 @@ public class MainActivity extends AppCompatActivity {
 
                 categoryDao.insertCategory(defaultCategory);
 
-                // Nach Insert: Liste neu laden, damit ID korrekt geladen wird
                 categories = categoryDao.getAllCategories();
             }
 
             if (!categories.isEmpty()) {
                 defaultCategoryId = categories.get(0).getId();
 
-                // Karte nur einfügen, wenn Kategorie-ID gesetzt ist
                 Card newCard = new Card();
                 newCard.setQuestion("Was ist Android?");
                 newCard.setAnswer("Ein Betriebssystem für mobile Geräte.");
@@ -106,11 +117,53 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
-
     private void loadCards() {
         new Thread(() -> {
             List<Card> cards = cardDao.getAllCardsSorted();
             runOnUiThread(() -> cardAdapter.setCardList(cards));
         }).start();
+    }
+
+    private void loadCardsByCategory(int categoryId) {
+        new Thread(() -> {
+            List<Card> filteredCards = cardDao.getCardsByCategory(categoryId);
+            runOnUiThread(() -> cardAdapter.setCardList(filteredCards));
+        }).start();
+    }
+
+    private void loadCategoriesForSpinner() {
+        new Thread(() -> {
+            categoryList = categoryDao.getAllCategories();
+            List<String> categoryNames = new ArrayList<>();
+            categoryNames.add("Alle anzeigen");
+            for (Category cat : categoryList) {
+                categoryNames.add(cat.getName());
+            }
+            runOnUiThread(() -> {
+                ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
+                        android.R.layout.simple_spinner_item, categoryNames);
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                categoryFilterSpinner.setAdapter(adapter);
+            });
+        }).start();
+    }
+
+    private void setupSpinnerListener() {
+        categoryFilterSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (position == 0) {
+                    loadCards(); // Alle Karten anzeigen
+                } else {
+                    int selectedCategoryId = categoryList.get(position - 1).getId();
+                    loadCardsByCategory(selectedCategoryId);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                loadCards();
+            }
+        });
     }
 }

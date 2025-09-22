@@ -17,6 +17,9 @@ public interface CardDao {
     @Query("SELECT * FROM cards ORDER BY last_modified DESC")
     List<Card> getAllCardsSorted();
 
+    @Query("SELECT * FROM cards WHERE category_id = :categoryId ORDER BY last_modified DESC")
+    List<Card> getCardsByCategory(int categoryId);
+
     @Insert
     void insertCard(Card card);
 
