@@ -8,6 +8,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.flashcardapp.model.AppDatabase;
@@ -34,8 +35,11 @@ public class LearningActivity extends AppCompatActivity {
 
     private List<Category> categoryList = new ArrayList<>();
     private List<Card> cardList = new ArrayList<>();
+    private List<Card> repeatCards = new ArrayList<>();
 
     private int currentCardIndex = 0;
+    private int knownCount = 0;
+    private int unknownCount = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,7 +67,6 @@ public class LearningActivity extends AppCompatActivity {
 
             @Override
             public void onNothingSelected(android.widget.AdapterView<?> parent) {
-                // Keine Auswahl, evtl. alle Karten laden
                 loadCardsForSelectedCategory(0);
             }
         });
@@ -71,15 +74,13 @@ public class LearningActivity extends AppCompatActivity {
         showAnswerButton.setOnClickListener(v -> {
             answerTextView.setVisibility(View.VISIBLE);
             showAnswerButton.setVisibility(View.GONE);
-            knownButton.setEnabled(true);   // Buttons bei Antwort zeigen aktivieren
+            knownButton.setEnabled(true);
             unknownButton.setEnabled(true);
         });
 
         knownButton.setOnClickListener(v -> nextCard(true));
-
         unknownButton.setOnClickListener(v -> nextCard(false));
 
-        // Anfangszustand: Buttons deaktiviert, Antwort ausgeblendet
         knownButton.setEnabled(false);
         unknownButton.setEnabled(false);
     }
@@ -110,6 +111,9 @@ public class LearningActivity extends AppCompatActivity {
             }
 
             currentCardIndex = 0;
+            knownCount = 0;
+            unknownCount = 0;
+            repeatCards.clear();
 
             runOnUiThread(() -> {
                 if (cardList.isEmpty()) {
@@ -136,13 +140,48 @@ public class LearningActivity extends AppCompatActivity {
     }
 
     private void nextCard(boolean knewIt) {
-        // Hier könntest du Fortschritt speichern (knewIt true/false)
+        if (knewIt) {
+            knownCount++;
+        } else {
+            unknownCount++;
+            repeatCards.add(cardList.get(currentCardIndex)); // Nicht gewusste Karte zur Wiederholung vormerken
+        }
+
         currentCardIndex++;
         if (currentCardIndex >= cardList.size()) {
-            // Lernrunde fertig
-            Toast.makeText(this, "Lernrunde abgeschlossen!", Toast.LENGTH_LONG).show();
-            finish(); // Activity schließen oder Rückmeldung geben
+            // Lernrunde abgeschlossen → Zusammenfassung und ggf. Wiederholung
+            String summary = "Du hast " + knownCount + " von " + cardList.size() + " Karten gewusst (" +
+                    (cardList.size() > 0 ? (100 * knownCount / cardList.size()) : 0) + "%)." +
+                    "\nNicht gewusst: " + unknownCount;
+
+            if (!repeatCards.isEmpty()) {
+                new AlertDialog.Builder(this)
+                        .setTitle("Lernfortschritt")
+                        .setMessage(summary + "\n\nNicht gewusste Karten erneut lernen?")
+                        .setPositiveButton("Ja", (dialog, which) -> repeatLernrunde())
+                        .setNegativeButton("Nein", (dialog, which) -> finish())
+                        .setCancelable(false)
+                        .show();
+            } else {
+                new AlertDialog.Builder(this)
+                        .setTitle("Lernfortschritt")
+                        .setMessage(summary)
+                        .setPositiveButton("OK", (dialog, which) -> finish())
+                        .setCancelable(false)
+                        .show();
+            }
         } else {
+            showCard(cardList.get(currentCardIndex));
+        }
+    }
+
+    private void repeatLernrunde() {
+        cardList = new ArrayList<>(repeatCards);
+        repeatCards.clear();
+        currentCardIndex = 0;
+        knownCount = 0;
+        unknownCount = 0;
+        if (!cardList.isEmpty()) {
             showCard(cardList.get(currentCardIndex));
         }
     }
