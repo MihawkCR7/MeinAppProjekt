@@ -40,6 +40,7 @@ public class LearningActivity extends AppCompatActivity {
     private int currentCardIndex = 0;
     private int knownCount = 0;
     private int unknownCount = 0;
+    private boolean repeatModus = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,12 +63,14 @@ public class LearningActivity extends AppCompatActivity {
         categorySelectorSpinner.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
-                loadCardsForSelectedCategory(position);
+                repeatModus = false; // Immer Hauptlernmodus starten
+                loadDueCardsForCategory(position);
             }
 
             @Override
             public void onNothingSelected(android.widget.AdapterView<?> parent) {
-                loadCardsForSelectedCategory(0);
+                repeatModus = false;
+                loadDueCardsForCategory(0);
             }
         });
 
@@ -101,13 +104,14 @@ public class LearningActivity extends AppCompatActivity {
         }).start();
     }
 
-    private void loadCardsForSelectedCategory(int spinnerPosition) {
+    private void loadDueCardsForCategory(int spinnerPosition) {
         new Thread(() -> {
+            long currentTime = System.currentTimeMillis();
             if (spinnerPosition == 0) {
-                cardList = cardDao.getAllCardsSorted();
+                cardList = cardDao.getDueCards(currentTime);
             } else {
                 int categoryId = categoryList.get(spinnerPosition - 1).getId();
-                cardList = cardDao.getCardsByCategory(categoryId);
+                cardList = cardDao.getDueCardsByCategory(categoryId, currentTime);
             }
 
             currentCardIndex = 0;
@@ -117,7 +121,7 @@ public class LearningActivity extends AppCompatActivity {
 
             runOnUiThread(() -> {
                 if (cardList.isEmpty()) {
-                    Toast.makeText(LearningActivity.this, "Keine Karten in dieser Kategorie", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LearningActivity.this, "Keine fälligen Karten in dieser Kategorie", Toast.LENGTH_SHORT).show();
                     questionTextView.setText("");
                     answerTextView.setText("");
                     showAnswerButton.setVisibility(View.GONE);
@@ -140,26 +144,63 @@ public class LearningActivity extends AppCompatActivity {
     }
 
     private void nextCard(boolean knewIt) {
-        if (knewIt) {
-            knownCount++;
+        Card currentCard = cardList.get(currentCardIndex);
+        long now = System.currentTimeMillis();
+
+        if (repeatModus) {
+            // Im Wiederholmodus: keine Statusänderung, nur Anzeige
+            if (knewIt) {
+                // Kein Statusupdate
+            } else {
+                // Kein Statusupdate
+            }
         } else {
-            unknownCount++;
-            repeatCards.add(cardList.get(currentCardIndex)); // Nicht gewusste Karte zur Wiederholung vormerken
+            // Hauptlernmodus Logik
+            if (knewIt) {
+                knownCount++;
+                int newBox = Math.min(currentCard.getBox() + 1, 5);
+                currentCard.setBox(newBox);
+
+                int newInterval = Math.min(currentCard.getInterval() * 2, 64);
+                currentCard.setInterval(newInterval);
+
+                currentCard.setLastModified(now);
+            } else {
+                unknownCount++;
+                repeatCards.add(currentCard);
+                currentCard.setBox(1);
+                currentCard.setInterval(1);
+                currentCard.setLastModified(0);
+            }
         }
 
+        new Thread(() -> cardDao.updateCard(currentCard)).start();
+
         currentCardIndex++;
+
         if (currentCardIndex >= cardList.size()) {
-            // Lernrunde abgeschlossen → Zusammenfassung und ggf. Wiederholung
             String summary = "Du hast " + knownCount + " von " + cardList.size() + " Karten gewusst (" +
                     (cardList.size() > 0 ? (100 * knownCount / cardList.size()) : 0) + "%)." +
                     "\nNicht gewusst: " + unknownCount;
 
-            if (!repeatCards.isEmpty()) {
+            if (!repeatCards.isEmpty() && !repeatModus) {
                 new AlertDialog.Builder(this)
                         .setTitle("Lernfortschritt")
                         .setMessage(summary + "\n\nNicht gewusste Karten erneut lernen?")
-                        .setPositiveButton("Ja", (dialog, which) -> repeatLernrunde())
-                        .setNegativeButton("Nein", (dialog, which) -> finish())
+                        .setPositiveButton("Ja", (dialog, which) -> {
+                            repeatModus = true;
+                            cardList = new ArrayList<>(repeatCards);
+                            repeatCards.clear();
+                            currentCardIndex = 0;
+                            knownCount = 0;
+                            unknownCount = 0;
+                            showCard(cardList.get(currentCardIndex));
+                        })
+                        .setNegativeButton("Nein", (dialog, which) -> {
+                            // Keine Statusänderung nötig, Hauptlernmodus endet
+                            finish();
+                        })
+
                         .setCancelable(false)
                         .show();
             } else {
@@ -171,17 +212,6 @@ public class LearningActivity extends AppCompatActivity {
                         .show();
             }
         } else {
-            showCard(cardList.get(currentCardIndex));
-        }
-    }
-
-    private void repeatLernrunde() {
-        cardList = new ArrayList<>(repeatCards);
-        repeatCards.clear();
-        currentCardIndex = 0;
-        knownCount = 0;
-        unknownCount = 0;
-        if (!cardList.isEmpty()) {
             showCard(cardList.get(currentCardIndex));
         }
     }

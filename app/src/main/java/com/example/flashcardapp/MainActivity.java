@@ -26,12 +26,12 @@ public class MainActivity extends AppCompatActivity {
 
     private Button addCardButton;
     private Button manageCategoriesButton;
-    private Button startLearningButton; // Neuer Button für Lernmodus
+    private Button startLearningButton;
     private RecyclerView recyclerView;
     private CardAdapter cardAdapter;
 
-    private Spinner categoryFilterSpinner; // Spinner für Kategorie-Filter
-    private SearchView cardSearchView; // Suchleiste für Karten
+    private Spinner categoryFilterSpinner;
+    private SearchView cardSearchView;
 
     private List<Category> categoryList = new ArrayList<>();
 
@@ -46,10 +46,10 @@ public class MainActivity extends AppCompatActivity {
 
         addCardButton = findViewById(R.id.button_add_card);
         manageCategoriesButton = findViewById(R.id.button_manage_categories);
-        startLearningButton = findViewById(R.id.button_start_learning); // Initialisieren
+        startLearningButton = findViewById(R.id.button_start_learning);
         recyclerView = findViewById(R.id.recyclerView_cards);
         categoryFilterSpinner = findViewById(R.id.spinnerCategoryFilter);
-        cardSearchView = findViewById(R.id.searchView_cards); // Suchleiste initialisieren
+        cardSearchView = findViewById(R.id.searchView_cards);
 
         db = AppDatabase.getDatabase(getApplicationContext());
         cardDao = db.cardDao();
@@ -75,7 +75,6 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        // Listener für Suchleiste (Suchtext an Adapter weitergeben)
         cardSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -90,7 +89,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Listener für Button Lernmodus starten
         startLearningButton.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, LearningActivity.class);
             startActivity(intent);
@@ -98,18 +96,18 @@ public class MainActivity extends AppCompatActivity {
 
         insertSampleCard();
 
-        loadCategoriesForSpinner(); // Kategorien für Spinner laden
+        loadCategoriesForSpinner();
 
-        setupSpinnerListener(); // Spinner Listener setzen
+        setupSpinnerListener();
 
-        loadCards(); // initial alle Karten laden
+        loadCards();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        loadCategoriesForSpinner(); // Kategorien aktuell halten
-        loadCards(); // Karten neu laden
+        loadCategoriesForSpinner();
+        loadCards();
     }
 
     private void insertSampleCard() {
@@ -137,6 +135,8 @@ public class MainActivity extends AppCompatActivity {
                 newCard.setQuestion("Was ist Android?");
                 newCard.setAnswer("Ein Betriebssystem für mobile Geräte.");
                 newCard.setBox(1);
+                newCard.setInterval(1); // Intervall 1 Tag
+                newCard.setLastModified(0); // sofort fällig
                 newCard.setCategoryId(defaultCategoryId);
 
                 cardDao.insertCard(newCard);
@@ -180,7 +180,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (position == 0) {
-                    loadCards(); // Alle Karten anzeigen
+                    loadCards();
                 } else {
                     int selectedCategoryId = categoryList.get(position - 1).getId();
                     loadCardsByCategory(selectedCategoryId);

@@ -22,8 +22,11 @@ public class Card {
     private String question;
     private String answer;
 
-    // Leitner Box Status (z.B. 1 bis 5)
-    private int box;
+    // Leitner Box Status (Default 1)
+    private int box = 1;
+
+    @ColumnInfo(name = "interval_days")
+    private int interval = 1; // Anzahl Tage bis zur nächsten Wiederholung, Default 1
 
     @ColumnInfo(name = "last_modified")
     private long lastModified;
@@ -56,6 +59,12 @@ public class Card {
     }
     public void setBox(int box) {
         this.box = box;
+    }
+    public int getInterval() {
+        return interval;
+    }
+    public void setInterval(int interval) {
+        this.interval = interval;
     }
     public long getLastModified() {
         return lastModified;

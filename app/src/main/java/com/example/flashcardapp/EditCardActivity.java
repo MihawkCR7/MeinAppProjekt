@@ -136,8 +136,6 @@ public class EditCardActivity extends AppCompatActivity {
             return;
         }
 
-        long now = System.currentTimeMillis();
-
         int selectedCategoryIndex = categorySpinner.getSelectedItemPosition();
         int selectedCategoryId = categories.isEmpty() || selectedCategoryIndex < 0
                 ? 0
@@ -148,7 +146,8 @@ public class EditCardActivity extends AppCompatActivity {
             newCard.setQuestion(question);
             newCard.setAnswer(answer);
             newCard.setBox(1);
-            newCard.setLastModified(now);
+            newCard.setInterval(1);        // Intervall auf 1 Tag
+            newCard.setLastModified(0);    // sofort fällig
             newCard.setCategoryId(selectedCategoryId);
 
             new Thread(() -> {
@@ -161,7 +160,7 @@ public class EditCardActivity extends AppCompatActivity {
         } else {
             loadedCard.setQuestion(question);
             loadedCard.setAnswer(answer);
-            loadedCard.setLastModified(now);
+            loadedCard.setLastModified(System.currentTimeMillis());
             loadedCard.setCategoryId(selectedCategoryId);
 
             new Thread(() -> {
