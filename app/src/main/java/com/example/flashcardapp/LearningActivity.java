@@ -40,6 +40,9 @@ public class LearningActivity extends AppCompatActivity {
     private int currentCardIndex = 0;
     private int knownCount = 0;
     private int unknownCount = 0;
+    private int repeatKnownCount = 0;
+    private int repeatUnknownCount = 0;
+
     private boolean repeatModus = false;
 
     @Override
@@ -63,7 +66,7 @@ public class LearningActivity extends AppCompatActivity {
         categorySelectorSpinner.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
-                repeatModus = false; // Immer Hauptlernmodus starten
+                repeatModus = false; // Hauptlernmodus
                 loadDueCardsForCategory(position);
             }
 
@@ -117,6 +120,8 @@ public class LearningActivity extends AppCompatActivity {
             currentCardIndex = 0;
             knownCount = 0;
             unknownCount = 0;
+            repeatKnownCount = 0;
+            repeatUnknownCount = 0;
             repeatCards.clear();
 
             runOnUiThread(() -> {
@@ -148,14 +153,12 @@ public class LearningActivity extends AppCompatActivity {
         long now = System.currentTimeMillis();
 
         if (repeatModus) {
-            // Im Wiederholmodus: keine Statusänderung, nur Anzeige
-            if (knewIt) {
-                // Kein Statusupdate
-            } else {
-                // Kein Statusupdate
-            }
+            if (knewIt) repeatKnownCount++;
+            else repeatUnknownCount++;
+
+            // Keine Statusänderung im Wiederholmodus
+
         } else {
-            // Hauptlernmodus Logik
             if (knewIt) {
                 knownCount++;
                 int newBox = Math.min(currentCard.getBox() + 1, 5);
@@ -179,37 +182,53 @@ public class LearningActivity extends AppCompatActivity {
         currentCardIndex++;
 
         if (currentCardIndex >= cardList.size()) {
-            String summary = "Du hast " + knownCount + " von " + cardList.size() + " Karten gewusst (" +
-                    (cardList.size() > 0 ? (100 * knownCount / cardList.size()) : 0) + "%)." +
-                    "\nNicht gewusst: " + unknownCount;
+            if (repeatModus) {
+                String repeatSummary;
+                if (repeatUnknownCount == 0) {
+                    repeatSummary = "Du hast alle falschen Karten erfolgreich wiederholt!";
+                } else {
+                    repeatSummary = "Wiederholmodus: Du hast " + repeatKnownCount + " von " + cardList.size() +
+                            " Karten gewusst.\nNicht gewusst: " + repeatUnknownCount;
+                }
 
-            if (!repeatCards.isEmpty() && !repeatModus) {
                 new AlertDialog.Builder(this)
-                        .setTitle("Lernfortschritt")
-                        .setMessage(summary + "\n\nNicht gewusste Karten erneut lernen?")
-                        .setPositiveButton("Ja", (dialog, which) -> {
-                            repeatModus = true;
-                            cardList = new ArrayList<>(repeatCards);
-                            repeatCards.clear();
-                            currentCardIndex = 0;
-                            knownCount = 0;
-                            unknownCount = 0;
-                            showCard(cardList.get(currentCardIndex));
-                        })
-                        .setNegativeButton("Nein", (dialog, which) -> {
-                            // Keine Statusänderung nötig, Hauptlernmodus endet
-                            finish();
-                        })
-
-                        .setCancelable(false)
-                        .show();
-            } else {
-                new AlertDialog.Builder(this)
-                        .setTitle("Lernfortschritt")
-                        .setMessage(summary)
+                        .setTitle("Wiederholungsresultat")
+                        .setMessage(repeatSummary)
                         .setPositiveButton("OK", (dialog, which) -> finish())
                         .setCancelable(false)
                         .show();
+
+            } else {
+                String summary = "Du hast " + knownCount + " von " + cardList.size() + " Karten gewusst (" +
+                        (cardList.size() > 0 ? (100 * knownCount / cardList.size()) : 0) + "%)." +
+                        "\nNicht gewusst: " + unknownCount;
+
+                if (!repeatCards.isEmpty()) {
+                    new AlertDialog.Builder(this)
+                            .setTitle("Lernfortschritt")
+                            .setMessage(summary + "\n\nNicht gewusste Karten erneut lernen?")
+                            .setPositiveButton("Ja", (dialog, which) -> {
+                                repeatModus = true;
+                                cardList = new ArrayList<>(repeatCards);
+                                repeatCards.clear();
+                                currentCardIndex = 0;
+                                knownCount = 0;
+                                unknownCount = 0;
+                                repeatKnownCount = 0;
+                                repeatUnknownCount = 0;
+                                showCard(cardList.get(currentCardIndex));
+                            })
+                            .setNegativeButton("Nein", (dialog, which) -> finish())
+                            .setCancelable(false)
+                            .show();
+                } else {
+                    new AlertDialog.Builder(this)
+                            .setTitle("Lernfortschritt")
+                            .setMessage(summary)
+                            .setPositiveButton("OK", (dialog, which) -> finish())
+                            .setCancelable(false)
+                            .show();
+                }
             }
         } else {
             showCard(cardList.get(currentCardIndex));
